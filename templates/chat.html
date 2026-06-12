@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAI Chat</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+
+    
+    <div class="chat-container">
+
+        <!-- HEADER -->
+        <div class="chat-header">
+            <div class="header-left">
+                <i class="ri-heart-pulse-fill"></i>
+                <span>MedAI Assistant</span>
+            </div>
+            <div class="status">Online</div>
+        </div>
+
+        <div class="chat-box" id="chat-box">
+
+            <div class="chat-message bot">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+                <div class="bubble">
+                    Hello 👋 I'm your medical assistant. Ask me anything!
+                </div>
+            </div>
+
+        </div>
+        <div class="chat-input">
+            <label class="upload-btn">
+                <i class="ri-attachment-2"></i>
+                <input type="file" id="file-input" hidden>
+            </label>
+
+            <input type="text" id="user-input" placeholder="Type your message...">
+
+            <button onclick="sendMessage()">
+                <i class="ri-send-plane-fill"></i>
+            </button>
+        </div>
+    </div>
+
+
+
+<script>
+function formatResponse(text) {
+    return text
+        .replace(/\*\*/g, "")        // remove **
+        .replace(/^- /gm, "• ")      // replace - with bullet
+        .trim();
+}
+async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const message = input.value.trim();
+
+    const chatBox = document.getElementById("chat-box");
+    const fileInput = document.getElementById("file-input");
+    const file = fileInput.files[0];
+
+    if (!message && !file) return;
+    if (message) {
+        const userDiv = document.createElement("div");
+        userDiv.className = "chat-message user";
+        userDiv.innerHTML = `<div class="bubble">${message}</div>`;
+        chatBox.appendChild(userDiv);
+    }
+     if (file) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "chat-message user";
+        fileDiv.innerHTML = `
+            <div class="bubble">📄 Uploaded: ${file.name}</div>
+        `;
+        chatBox.appendChild(fileDiv);
+    }
+
+    input.value = "";
+
+    // BOT MESSAGE (Typing)
+    const botDiv = document.createElement("div");
+    botDiv.className = "chat-message bot";
+    botDiv.innerHTML = `
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+        <div class="bubble typing">
+            <span></span><span></span><span></span>
+        </div>
+    `;
+    chatBox.appendChild(botDiv);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        let formData = new FormData();
+        formData.append("message", message);
+
+        if (file) {
+            formData.append("file", file);
+        }
+
+        const response = await fetch("/get", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.text();
+        if (data.includes("<!DOCTYPE html>")) {
+            botDiv.querySelector(".bubble").innerText = "⚠️ Server error. Check backend.";
+        } else {
+            botDiv.querySelector(".bubble").innerText = formatResponse(data);
+        }
+        fileInput.value = "";
+
+    } catch (error) {
+        botDiv.querySelector(".bubble").innerText = "⚠️ Error";
+        fileInput.value = "";
+    }
+}
+
+// ENTER KEY
+document.getElementById("user-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
+</html>
