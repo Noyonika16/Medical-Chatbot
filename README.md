@@ -1,4 +1,4 @@
-# 🩺 Medical AI Chatbot (RAG + Web + Memory)
+# 🩺 REMEDIFY - A Medical AI Chatbot (RAG + Web + Memory)
 
 An intelligent medical assistant chatbot built using **Flask + LangChain + Pinecone + OpenRouter**, capable of answering health-related queries using:
 
